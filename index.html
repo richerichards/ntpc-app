@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NTPC Tracker</title>
@@ -7,7 +8,54 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#4f46e5">
-<style>html,body{margin:0;height:100%;background:#0e1017}iframe{border:0;width:100%;height:100%}</style>
-</head><body>
-<iframe src="https://script.google.com/macros/s/AKfycbwiAUCO271b1T2QLual4LxaFddz6I56oEdP9iIH49CrRx05iynWddXgGlgHoCoIl8o/exec"></iframe>
-</body></html>
+<style>
+html,body{margin:0;height:100%;background:#0e1017;color:#eceef5;font:16px system-ui,sans-serif}
+iframe{border:0;width:100%;height:100%;display:block}
+#setup{display:none;min-height:100%;align-items:center;justify-content:center;padding:24px}
+.box{width:100%;max-width:420px;text-align:center}
+input{width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid #2a2f38;background:#171a24;color:inherit;font:inherit;margin:14px 0 8px}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font:inherit;font-weight:600}
+#msg{color:#f87171;min-height:20px;font-size:14px}
+small{color:#9aa1b2}
+</style>
+</head>
+<body>
+<div id="setup"><div class="box">
+  <div style="font-size:48px">🔗</div>
+  <h2>Connect your app</h2>
+  <small>Paste your Apps Script web app link (ends with /exec). It is saved on this device only.</small>
+  <input id="u" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <div id="msg"></div>
+  <button onclick="save()">Save and open</button>
+</div></div>
+<iframe id="f" style="display:none"></iframe>
+
+<script>
+const KEY = 'ntpc_url';
+const RE = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/;
+const $ = id => document.getElementById(id);
+function get() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+function set(v) { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} }
+function show() {
+  const u = get();
+  if (RE.test(u)) { $('setup').style.display = 'none'; const f = $('f'); f.style.display = 'block'; f.src = u; }
+  else { $('f').style.display = 'none'; $('setup').style.display = 'flex'; }
+}
+function save() {
+  const v = $('u').value.trim();
+  if (!RE.test(v)) { $('msg').textContent = 'That does not look like an Apps Script /exec link'; return; }
+  set(v); show();
+}
+
+// One-time setup link: .../ntpc-app/#u=<your /exec url>   (text after # is never sent to GitHub)
+// Reset the saved link: open .../ntpc-app/?reset
+const h = new URLSearchParams(location.hash.slice(1));
+if (h.get('u') && RE.test(h.get('u'))) set(h.get('u'));
+if (location.search.indexOf('reset') >= 0 || h.has('reset')) set('');
+if (location.hash || location.search) history.replaceState(null, '', location.pathname);
+show();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
